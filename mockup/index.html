@@ -1206,8 +1206,6 @@ function setTheme(mode) {
         label.classList.remove('visible');
     } else if (mode === 'random') {
         applyRandomTheme();
-        // Cycle every 4 seconds for fun
-        randomInterval = setInterval(applyRandomTheme, 4000);
     }
 
     localStorage.setItem('tax-organizer-theme', mode);
