@@ -1,0 +1,129 @@
+{
+  "taxYear": 2025,
+
+  "categories": [
+    {
+      "id": "dbs-tzelin",
+      "name": "DBS-TzeLin",
+      "icon": "🏦",
+      "folders": ["Documents/Banking & Finance/DBS/TzeLin/"],
+      "expected": [
+        { "name": "Wealth Management Consolidated Statements (Jan-Dec)", "pattern": "Wealth Management Consolidated Statement_*2025*" },
+        { "name": "Annual Interest Summary", "pattern": "*Interest*2025*" },
+        { "name": "Tax Voucher / IR8A", "pattern": "*Tax*Voucher*2025*|*IR8A*2025*" }
+      ]
+    },
+    {
+      "id": "dbs-mayanne",
+      "name": "DBS-MayAnne",
+      "icon": "🏦",
+      "folders": ["Documents/Banking & Finance/DBS/MayAnne/"],
+      "expected": [
+        { "name": "Wealth Management Consolidated Statements (Jan-Dec)", "pattern": "Wealth Management Consolidated Statement_*2025*" },
+        { "name": "Annual Interest Summary", "pattern": "*Interest*2025*" }
+      ]
+    },
+    {
+      "id": "fidelity",
+      "name": "Fidelity",
+      "icon": "📈",
+      "folders": ["Documents/Banking & Finance/Fidelity/"],
+      "expected": [
+        { "name": "1099-DIV", "pattern": "*1099-DIV*2025*" },
+        { "name": "1099-B", "pattern": "*1099-B*2025*" },
+        { "name": "1099-INT", "pattern": "*1099-INT*2025*" },
+        { "name": "1099-R", "pattern": "*1099-R*2025*" },
+        { "name": "Annual Brokerage Statement", "pattern": "*Annual*Statement*2025*" }
+      ]
+    },
+    {
+      "id": "uob",
+      "name": "UOB",
+      "icon": "🏦",
+      "folders": ["Documents/Banking & Finance/UOB/"],
+      "expected": [
+        { "name": "Annual Statement", "pattern": "*Annual*2025*|*Statement*2025*" },
+        { "name": "Interest Summary", "pattern": "*Interest*2025*" }
+      ]
+    },
+    {
+      "id": "fortis",
+      "name": "Fortis",
+      "icon": "⚡",
+      "folders": ["Documents/Utilities/Fortis/"],
+      "expected": [
+        { "name": "Monthly Bills (Jan-Dec)", "pattern": "*Fortis*2025*|*FortisBC*2025*" },
+        { "name": "Annual Summary", "pattern": "*Annual*2025*|*Summary*2025*" }
+      ]
+    },
+    {
+      "id": "bchydro",
+      "name": "BCHydro",
+      "icon": "💡",
+      "folders": ["Documents/Utilities/BCHydro/"],
+      "expected": [
+        { "name": "Bi-Monthly Bills (2025)", "pattern": "*BCHydro*2025*|*BC Hydro*2025*" },
+        { "name": "Annual Summary", "pattern": "*Annual*2025*|*Summary*2025*" }
+      ]
+    },
+    {
+      "id": "water-sewer",
+      "name": "Water & Sewer",
+      "icon": "🚿",
+      "folders": ["Documents/Utilities/Water/"],
+      "expected": [
+        { "name": "Quarterly Bills (2025)", "pattern": "*Water*2025*|*Sewer*2025*" },
+        { "name": "Annual Summary", "pattern": "*Annual*2025*" }
+      ]
+    },
+    {
+      "id": "property-tax",
+      "name": "PropertyTax",
+      "icon": "🏠",
+      "folders": ["Documents/Property/Tax/"],
+      "expected": [
+        { "name": "Property Tax Notice 2025", "pattern": "*Property*Tax*2025*|*Assessment*2025*" },
+        { "name": "Property Tax Payment Receipt", "pattern": "*Receipt*2025*|*Payment*2025*" }
+      ]
+    },
+    {
+      "id": "telecommunications",
+      "name": "Telecommunications",
+      "icon": "📡",
+      "folders": ["Documents/Telecom/"],
+      "expected": [
+        { "name": "Monthly Bills (Jan-Dec)", "pattern": "*Telus*2025*|*Rogers*2025*|*Shaw*2025*|*Bell*2025*" },
+        { "name": "Annual Summary", "pattern": "*Annual*2025*|*Summary*2025*" }
+      ]
+    },
+    {
+      "id": "home-insurance",
+      "name": "Home & Strata Insurance",
+      "icon": "🛡️",
+      "folders": ["Documents/Insurance/Home/"],
+      "expected": [
+        { "name": "Home Insurance Policy 2025", "pattern": "*Home*Insurance*2025*|*Homeowner*2025*" },
+        { "name": "Strata Insurance Certificate 2025", "pattern": "*Strata*Insurance*2025*" },
+        { "name": "Payment Confirmation", "pattern": "*Payment*2025*|*Receipt*2025*" }
+      ]
+    },
+    {
+      "id": "home-maintenance",
+      "name": "Home Maintenance",
+      "icon": "🔧",
+      "folders": ["Documents/Home/Maintenance/"],
+      "expected": [
+        { "name": "Maintenance Receipts (2025)", "pattern": "*Maintenance*2025*|*Repair*2025*|*Invoice*2025*" }
+      ]
+    },
+    {
+      "id": "donations",
+      "name": "Donations",
+      "icon": "🎁",
+      "folders": ["Documents/Donations/"],
+      "expected": [
+        { "name": "Charitable Donation Receipts 2025", "pattern": "*Donation*2025*|*Charitable*2025*|*Receipt*2025*" }
+      ]
+    }
+  ]
+}
