@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tax Organizer — 2025</title>
     <style>
-        :root {
+        /* ── Dark Theme (default) ───────────────────── */
+        :root, [data-theme="dark"] {
             --bg: #0d1117;
             --surface: #161b22;
             --surface-raised: #1c2333;
@@ -24,6 +25,25 @@
             --radius: 8px;
             --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
             --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+        }
+
+        /* ── Light Theme ────────────────────────────── */
+        [data-theme="light"] {
+            --bg: #f6f8fa;
+            --surface: #ffffff;
+            --surface-raised: #f0f2f5;
+            --border: #d0d7de;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8b949e;
+            --accent: #0969da;
+            --accent-hover: #0550ae;
+            --green: #1a7f37;
+            --green-bg: rgba(26, 127, 55, 0.1);
+            --yellow: #9a6700;
+            --yellow-bg: rgba(154, 103, 0, 0.1);
+            --red: #cf222e;
+            --red-bg: rgba(207, 34, 46, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -411,6 +431,49 @@
             display: none;
         }
 
+        /* ── Theme Switcher ─────────────────────────── */
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--surface-raised);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 3px;
+        }
+        .theme-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+        .theme-btn:hover {
+            color: var(--text-primary);
+            background: var(--border);
+        }
+        .theme-btn.active {
+            background: var(--accent);
+            color: #000;
+        }
+        .random-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .random-label.visible {
+            opacity: 1;
+        }
+
         /* ── Responsive ────────────────────────────────── */
         @media (max-width: 1024px) {
             .main {
@@ -454,6 +517,12 @@
         </select>
     </div>
     <div class="header-actions">
+        <div class="theme-switcher">
+            <button class="theme-btn active" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+            <button class="theme-btn" onclick="setTheme('light')" title="Light mode">☀️</button>
+            <button class="theme-btn" onclick="setTheme('random')" title="Random theme">🎲</button>
+        </div>
+        <span class="random-label" id="randomLabel"></span>
         <button class="btn" title="Last scanned: 2026-02-28 09:14 AM">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             9:14 AM
@@ -925,6 +994,101 @@
 
     </div>
 </div>
+
+<script>
+const RANDOM_THEMES = [
+    { name: 'Synthwave', bg: '#1a1a2e', surface: '#16213e', surfaceRaised: '#0f3460', border: '#533483', textPrimary: '#e94560', textSecondary: '#c4b7cb', textMuted: '#8a7090', accent: '#e94560', accentHover: '#ff6b81', green: '#00ff87', greenBg: 'rgba(0,255,135,0.12)', yellow: '#ffd700', yellowBg: 'rgba(255,215,0,0.12)', red: '#ff2e63', redBg: 'rgba(255,46,99,0.12)' },
+    { name: 'Solarized', bg: '#002b36', surface: '#073642', surfaceRaised: '#0a4050', border: '#586e75', textPrimary: '#fdf6e3', textSecondary: '#93a1a1', textMuted: '#657b83', accent: '#268bd2', accentHover: '#2aa198', green: '#859900', greenBg: 'rgba(133,153,0,0.15)', yellow: '#b58900', yellowBg: 'rgba(181,137,0,0.15)', red: '#dc322f', redBg: 'rgba(220,50,47,0.15)' },
+    { name: 'Dracula', bg: '#282a36', surface: '#343746', surfaceRaised: '#3e4155', border: '#6272a4', textPrimary: '#f8f8f2', textSecondary: '#bd93f9', textMuted: '#6272a4', accent: '#bd93f9', accentHover: '#ff79c6', green: '#50fa7b', greenBg: 'rgba(80,250,123,0.12)', yellow: '#f1fa8c', yellowBg: 'rgba(241,250,140,0.12)', red: '#ff5555', redBg: 'rgba(255,85,85,0.12)' },
+    { name: 'Nord', bg: '#2e3440', surface: '#3b4252', surfaceRaised: '#434c5e', border: '#4c566a', textPrimary: '#eceff4', textSecondary: '#d8dee9', textMuted: '#7b88a1', accent: '#88c0d0', accentHover: '#8fbcbb', green: '#a3be8c', greenBg: 'rgba(163,190,140,0.12)', yellow: '#ebcb8b', yellowBg: 'rgba(235,203,139,0.12)', red: '#bf616a', redBg: 'rgba(191,97,106,0.12)' },
+    { name: 'Monokai', bg: '#272822', surface: '#2d2e27', surfaceRaised: '#383930', border: '#49483e', textPrimary: '#f8f8f2', textSecondary: '#a6e22e', textMuted: '#75715e', accent: '#66d9ef', accentHover: '#a6e22e', green: '#a6e22e', greenBg: 'rgba(166,226,46,0.12)', yellow: '#e6db74', yellowBg: 'rgba(230,219,116,0.12)', red: '#f92672', redBg: 'rgba(249,38,114,0.12)' },
+    { name: 'Cyberpunk', bg: '#0a0a0f', surface: '#12121a', surfaceRaised: '#1a1a28', border: '#ff00ff44', textPrimary: '#00ffff', textSecondary: '#ff00ff', textMuted: '#6a5acd', accent: '#ff00ff', accentHover: '#ff69b4', green: '#00ff00', greenBg: 'rgba(0,255,0,0.1)', yellow: '#ffff00', yellowBg: 'rgba(255,255,0,0.1)', red: '#ff0000', redBg: 'rgba(255,0,0,0.1)' },
+    { name: 'Ocean', bg: '#0a192f', surface: '#112240', surfaceRaised: '#1d3557', border: '#233554', textPrimary: '#ccd6f6', textSecondary: '#8892b0', textMuted: '#495670', accent: '#64ffda', accentHover: '#4de8c2', green: '#64ffda', greenBg: 'rgba(100,255,218,0.1)', yellow: '#ffd166', yellowBg: 'rgba(255,209,102,0.1)', red: '#ef476f', redBg: 'rgba(239,71,111,0.1)' },
+    { name: 'Retro Terminal', bg: '#0c0c0c', surface: '#111111', surfaceRaised: '#1a1a1a', border: '#00ff0033', textPrimary: '#00ff00', textSecondary: '#00cc00', textMuted: '#008800', accent: '#00ff00', accentHover: '#33ff33', green: '#00ff00', greenBg: 'rgba(0,255,0,0.08)', yellow: '#ffff00', yellowBg: 'rgba(255,255,0,0.08)', red: '#ff3333', redBg: 'rgba(255,51,51,0.08)' },
+    { name: 'Sunset', bg: '#1a0a2e', surface: '#2d1b52', surfaceRaised: '#3a2468', border: '#5a3d8a', textPrimary: '#ffecd2', textSecondary: '#fcb69f', textMuted: '#8a6a9e', accent: '#ff6b6b', accentHover: '#ee5a24', green: '#78e08f', greenBg: 'rgba(120,224,143,0.12)', yellow: '#f6b93b', yellowBg: 'rgba(246,185,59,0.12)', red: '#e55039', redBg: 'rgba(229,80,57,0.12)' },
+    { name: 'Cotton Candy', bg: '#fce4ec', surface: '#ffffff', surfaceRaised: '#f8bbd0', border: '#f48fb1', textPrimary: '#880e4f', textSecondary: '#ad1457', textMuted: '#c2185b', accent: '#e91e63', accentHover: '#c2185b', green: '#2e7d32', greenBg: 'rgba(46,125,50,0.1)', yellow: '#f57f17', yellowBg: 'rgba(245,127,23,0.1)', red: '#c62828', redBg: 'rgba(198,40,40,0.1)' },
+    { name: 'Midnight Purple', bg: '#0d0221', surface: '#150734', surfaceRaised: '#1f0c47', border: '#451e78', textPrimary: '#e0aaff', textSecondary: '#c77dff', textMuted: '#7b2cbf', accent: '#9d4edd', accentHover: '#c77dff', green: '#57cc99', greenBg: 'rgba(87,204,153,0.12)', yellow: '#fca311', yellowBg: 'rgba(252,163,17,0.12)', red: '#ef476f', redBg: 'rgba(239,71,111,0.12)' },
+    { name: 'Desert', bg: '#2b1d0e', surface: '#3c2a14', surfaceRaised: '#4d371c', border: '#6b4c2e', textPrimary: '#f5deb3', textSecondary: '#deb887', textMuted: '#a0845c', accent: '#cd853f', accentHover: '#daa520', green: '#6b8e23', greenBg: 'rgba(107,142,35,0.15)', yellow: '#daa520', yellowBg: 'rgba(218,165,32,0.15)', red: '#cd5c5c', redBg: 'rgba(205,92,92,0.15)' },
+    { name: 'Vaporwave', bg: '#1b0033', surface: '#240046', surfaceRaised: '#3c096c', border: '#7b2d8e', textPrimary: '#ff6fff', textSecondary: '#01cdfe', textMuted: '#8338ec', accent: '#01cdfe', accentHover: '#05ffa1', green: '#05ffa1', greenBg: 'rgba(5,255,161,0.1)', yellow: '#fffb96', yellowBg: 'rgba(255,251,150,0.1)', red: '#ff6e6e', redBg: 'rgba(255,110,110,0.1)' },
+    { name: 'Slate Blue', bg: '#1e293b', surface: '#273449', surfaceRaised: '#334155', border: '#475569', textPrimary: '#f1f5f9', textSecondary: '#94a3b8', textMuted: '#64748b', accent: '#3b82f6', accentHover: '#60a5fa', green: '#22c55e', greenBg: 'rgba(34,197,94,0.12)', yellow: '#eab308', yellowBg: 'rgba(234,179,8,0.12)', red: '#ef4444', redBg: 'rgba(239,68,68,0.12)' },
+    { name: 'Hacker', bg: '#000000', surface: '#0a0a0a', surfaceRaised: '#141414', border: '#1e1e1e', textPrimary: '#20c20e', textSecondary: '#1a9e0f', textMuted: '#0f6b08', accent: '#20c20e', accentHover: '#39ff14', green: '#39ff14', greenBg: 'rgba(57,255,20,0.06)', yellow: '#c8ff00', yellowBg: 'rgba(200,255,0,0.06)', red: '#ff1744', redBg: 'rgba(255,23,68,0.06)' }
+];
+
+let randomInterval = null;
+
+function setTheme(mode) {
+    // Update active button
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    event.target.closest('.theme-btn')?.classList.add('active') ||
+        document.querySelector(`.theme-btn[onclick*="'${mode}'"]`)?.classList.add('active');
+
+    const label = document.getElementById('randomLabel');
+
+    // Clear any running random interval
+    if (randomInterval) { clearInterval(randomInterval); randomInterval = null; }
+
+    if (mode === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        clearCustomVars();
+        label.textContent = '';
+        label.classList.remove('visible');
+    } else if (mode === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        clearCustomVars();
+        label.textContent = '';
+        label.classList.remove('visible');
+    } else if (mode === 'random') {
+        applyRandomTheme();
+        // Cycle every 4 seconds for fun
+        randomInterval = setInterval(applyRandomTheme, 4000);
+    }
+
+    localStorage.setItem('tax-organizer-theme', mode);
+}
+
+function applyRandomTheme() {
+    const theme = RANDOM_THEMES[Math.floor(Math.random() * RANDOM_THEMES.length)];
+    const root = document.documentElement;
+    root.setAttribute('data-theme', 'random');
+
+    root.style.setProperty('--bg', theme.bg);
+    root.style.setProperty('--surface', theme.surface);
+    root.style.setProperty('--surface-raised', theme.surfaceRaised);
+    root.style.setProperty('--border', theme.border);
+    root.style.setProperty('--text-primary', theme.textPrimary);
+    root.style.setProperty('--text-secondary', theme.textSecondary);
+    root.style.setProperty('--text-muted', theme.textMuted);
+    root.style.setProperty('--accent', theme.accent);
+    root.style.setProperty('--accent-hover', theme.accentHover);
+    root.style.setProperty('--green', theme.green);
+    root.style.setProperty('--green-bg', theme.greenBg);
+    root.style.setProperty('--yellow', theme.yellow);
+    root.style.setProperty('--yellow-bg', theme.yellowBg);
+    root.style.setProperty('--red', theme.red);
+    root.style.setProperty('--red-bg', theme.redBg);
+
+    const label = document.getElementById('randomLabel');
+    label.textContent = theme.name;
+    label.classList.add('visible');
+}
+
+function clearCustomVars() {
+    const props = ['--bg','--surface','--surface-raised','--border','--text-primary',
+        '--text-secondary','--text-muted','--accent','--accent-hover','--green',
+        '--green-bg','--yellow','--yellow-bg','--red','--red-bg'];
+    props.forEach(p => document.documentElement.style.removeProperty(p));
+}
+
+// Restore saved theme on load
+(function() {
+    const saved = localStorage.getItem('tax-organizer-theme');
+    if (saved && saved !== 'dark') {
+        // Simulate click on the right button
+        const btn = document.querySelector(`.theme-btn[onclick*="'${saved}'"]`);
+        if (btn) btn.click();
+    }
+})();
+</script>
 
 </body>
 </html>
