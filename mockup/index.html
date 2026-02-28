@@ -532,9 +532,9 @@
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             9:14 AM
         </button>
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" id="scanBtn" onclick="runScan()">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            Scan Now
+            <span id="scanBtnLabel">Scan Now</span>
         </button>
     </div>
 </header>
@@ -1248,11 +1248,174 @@ function clearCustomVars() {
 (function() {
     const saved = localStorage.getItem('tax-organizer-theme');
     if (saved && saved !== 'dark') {
-        // Simulate click on the right button
         const btn = document.querySelector(`.theme-btn[onclick*="'${saved}'"]`);
         if (btn) btn.click();
     }
 })();
+
+// ── Live API Integration ────────────────────────────────────
+let isScanning = false;
+
+async function runScan() {
+    if (isScanning) return;
+    isScanning = true;
+    const btn = document.getElementById('scanBtn');
+    const label = document.getElementById('scanBtnLabel');
+    btn.disabled = true;
+    label.textContent = 'Scanning…';
+    const startTime = performance.now();
+
+    try {
+        const resp = await fetch('/api/scan');
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        const duration = ((performance.now() - startTime) / 1000).toFixed(1);
+        renderDashboard(data, duration);
+        label.textContent = 'Scan Now';
+    } catch (e) {
+        label.textContent = 'Scan Now';
+        alert('Scan failed: ' + e.message + '\n\nMake sure the server is running (python -m src.server).');
+    } finally {
+        btn.disabled = false;
+        isScanning = false;
+    }
+}
+
+function renderDashboard(data, duration) {
+    const s = data.stats;
+
+    // Summary cards
+    const summaryCards = document.querySelectorAll('.summary-card');
+    if (summaryCards.length >= 4) {
+        summaryCards[0].querySelector('.summary-value').textContent = s.found;
+        summaryCards[0].querySelector('.summary-sub').textContent = `across ${s.categoryCount} categories` + (s.variableCount ? ` (${s.variableCount} unchecked)` : '');
+        summaryCards[1].querySelector('.summary-value').textContent = s.expected;
+        summaryCards[2].querySelector('.summary-value').textContent = s.missing;
+        summaryCards[3].querySelector('.summary-value').textContent = s.readiness + '%';
+        summaryCards[3].querySelector('.summary-sub').textContent = `${s.trackedFound} of ${s.expected} ready`;
+
+        // Color the readiness value
+        const rv = summaryCards[3].querySelector('.summary-value');
+        rv.className = 'summary-value ' + (s.readiness >= 90 ? 'green' : s.readiness >= 50 ? 'yellow' : 'red');
+    }
+
+    // Readiness bar
+    const foundSeg = document.querySelector('.readiness-segment.found');
+    const missingSeg = document.querySelector('.readiness-segment.missing');
+    if (foundSeg && missingSeg) {
+        foundSeg.style.width = s.readiness + '%';
+        foundSeg.textContent = s.trackedFound + ' found';
+        missingSeg.style.width = (100 - s.readiness) + '%';
+        missingSeg.textContent = s.missing + ' missing';
+    }
+
+    // Categories
+    const categoriesEl = document.querySelector('.categories');
+    categoriesEl.innerHTML = data.categories.map(cat => renderCategory(cat)).join('');
+
+    // Sidebar — missing items
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.innerHTML = renderSidebar(data, duration);
+}
+
+function renderCategory(cat) {
+    const badge = cat.variableCount
+        ? `<span class="category-badge badge-info">${cat.found_count} found</span>`
+        : `<span class="category-badge ${cat.missing_count === 0 ? 'badge-complete' : 'badge-partial'}">${cat.found_count} / ${cat.expected_count}</span>`;
+
+    const collapsed = cat.missing_count === 0 && !cat.variableCount ? ' collapsed' : '';
+
+    const rows = cat.documents.map(doc => {
+        if (doc.status === 'missing') {
+            return `<div class="doc-row">
+                <div class="doc-status-dot dot-missing"></div>
+                <div class="doc-name"><span class="missing-label">${esc(doc.name)}</span></div>
+                <div class="doc-folder">—</div>
+                <div class="doc-date">—</div>
+                <div class="doc-size">—</div>
+            </div>`;
+        }
+        return `<div class="doc-row">
+            <div class="doc-status-dot dot-found"></div>
+            <div class="doc-name"><a href="${esc(doc.webUrl)}" target="_blank" title="Open in OneDrive">${esc(doc.name)}</a></div>
+            <div class="doc-folder" title="${esc(doc.folder)}">${esc(doc.folder)}</div>
+            <div class="doc-date">${esc(doc.date)}</div>
+            <div class="doc-size">${esc(doc.size)}</div>
+        </div>`;
+    }).join('');
+
+    return `<div class="category-card${collapsed}">
+        <div class="category-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <div class="category-header-left">
+                <div class="category-icon">${cat.icon}</div>
+                <span class="category-name">${esc(cat.name)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                ${badge}
+                <span class="expand-arrow">▼</span>
+            </div>
+        </div>
+        <div class="category-body">
+            <div class="doc-header">
+                <span></span><span>Document</span><span>Location</span><span>Date</span><span style="text-align:right">Size</span>
+            </div>
+            ${rows}
+        </div>
+    </div>`;
+}
+
+function renderSidebar(data, duration) {
+    const scanTime = new Date(data.scan.time).toLocaleString();
+
+    // Missing items
+    const missingHtml = data.missingItems.length > 0
+        ? data.missingItems.map(m => `<div class="missing-item">
+            <span class="missing-icon">✕</span>
+            <div class="missing-details">
+                <div class="missing-doc-name">${esc(m.name)}</div>
+                <div class="missing-source">Expected from ${esc(m.category)}</div>
+            </div>
+        </div>`).join('')
+        : '<div style="color:var(--green);padding:8px;">All tracked documents found!</div>';
+
+    // Scan folders
+    const foldersHtml = data.categories.flatMap(cat =>
+        cat.folders.map(f => `<div class="source-item">
+            <span class="source-path">${esc(f.path)}</span>
+            <span class="source-count">${f.count} file${f.count !== 1 ? 's' : ''}</span>
+        </div>`)
+    ).join('');
+
+    return `
+        <div class="sidebar-card">
+            <div class="sidebar-title">⚠ Missing Documents (${data.missingItems.length})</div>
+            ${missingHtml}
+        </div>
+        <div class="sidebar-card">
+            <div class="sidebar-title">📂 Configured Scan Folders</div>
+            ${foldersHtml}
+        </div>
+        <div class="sidebar-card">
+            <div class="sidebar-title">🔍 Last Scan</div>
+            <div class="scan-info">
+                <div class="scan-info-row"><span class="scan-info-label">Time</span><span>${scanTime}</span></div>
+                <div class="scan-info-row"><span class="scan-info-label">Duration</span><span>${duration}s</span></div>
+                <div class="scan-info-row"><span class="scan-info-label">Files scanned</span><span>${data.scan.filesScanned}</span></div>
+                <div class="scan-info-row"><span class="scan-info-label">Matched to ${data.taxYear}</span><span>${data.scan.matched}</span></div>
+                <div class="scan-info-row"><span class="scan-info-label">Skipped (other years)</span><span>${data.scan.skipped}</span></div>
+            </div>
+        </div>`;
+}
+
+function esc(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
 </script>
 
 </body>

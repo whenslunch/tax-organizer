@@ -1,6 +1,9 @@
 node_modules/
 dist/
 .env
+.env.local
+.msal_cache
+config/config.json
 *.js.map
 output/
 .venv/

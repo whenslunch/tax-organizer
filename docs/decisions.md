@@ -65,3 +65,27 @@ ms.date: 2026-02-28
   - **Preact** (~3 KB): React API in a tiny package, if component architecture is needed later.
 - **Recommendation:** Start with vanilla JS. Add Alpine.js only if interactivity demands grow.
 - **Rationale:** The dashboard is primarily a read-only display of scanned results. Heavy frameworks add build complexity without proportional benefit.
+
+## DEC-008: MSAL Device Code Flow for Authentication
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Need to authenticate with Microsoft Graph API to read OneDrive files. Options include authorization code flow (requires redirect URI), device code flow (no redirect needed), or client credentials (app-only, no user context).
+- **Decision:** Use MSAL device code flow with a public client application registered for personal Microsoft accounts.
+- **Rationale:** Device code flow requires no redirect URI, no client secret, and works from a localhost CLI/server. Tokens are cached locally in `.msal_cache` and auto-refresh silently.
+
+## DEC-009: Flask as Backend Server
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Need a lightweight server to serve the dashboard and proxy Graph API calls. Options included Flask, FastAPI, or a bare `http.server`.
+- **Decision:** Flask with four endpoints: `GET /` (dashboard), `GET /api/scan` (scan OneDrive), `GET /api/browse` (folder browser), `POST /api/logout` (clear tokens).
+- **Rationale:** Flask is minimal, no async complexity needed for this use case, and pairs well with MSAL's synchronous token acquisition.
+
+## DEC-010: Variable-Count Categories
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Some categories (Home Maintenance, Donations) have a variable number of documents — no fixed expected count.
+- **Decision:** Categories with `"variableCount": true` in config are excluded from readiness tracking. They display a count badge ("N found") instead of "N / M."
+- **Rationale:** Readiness percentage should reflect only categories where completeness can be meaningfully measured.
