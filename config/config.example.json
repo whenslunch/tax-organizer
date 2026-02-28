@@ -112,18 +112,16 @@
       "name": "Home Maintenance",
       "icon": "🔧",
       "folders": ["Documents/Home/Maintenance/"],
-      "expected": [
-        { "name": "Maintenance Receipts (2025)", "pattern": "*Maintenance*2025*|*Repair*2025*|*Invoice*2025*" }
-      ]
+      "variableCount": true,
+      "expected": []
     },
     {
       "id": "donations",
       "name": "Donations",
       "icon": "🎁",
       "folders": ["Documents/Donations/"],
-      "expected": [
-        { "name": "Charitable Donation Receipts 2025", "pattern": "*Donation*2025*|*Charitable*2025*|*Receipt*2025*" }
-      ]
+      "variableCount": true,
+      "expected": []
     }
   ]
 }

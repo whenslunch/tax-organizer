@@ -267,6 +267,11 @@
             background: var(--red-bg);
             color: var(--red);
         }
+        .badge-info {
+            background: rgba(136,136,136,0.15);
+            color: var(--text-secondary);
+            font-style: italic;
+        }
         .category-body {
             border-top: 1px solid var(--border);
         }
@@ -541,11 +546,11 @@
     <div class="summary-card">
         <div class="summary-label">Documents Found</div>
         <div class="summary-value">26</div>
-        <div class="summary-sub">across 12 categories</div>
+        <div class="summary-sub">across 12 categories (6 unchecked)</div>
     </div>
     <div class="summary-card">
         <div class="summary-label">Expected</div>
-        <div class="summary-value">32</div>
+        <div class="summary-value">26</div>
         <div class="summary-sub">per your checklist</div>
     </div>
     <div class="summary-card">
@@ -555,8 +560,8 @@
     </div>
     <div class="summary-card">
         <div class="summary-label">Readiness</div>
-        <div class="summary-value yellow">81%</div>
-        <div class="summary-sub">26 of 32 ready</div>
+        <div class="summary-value yellow">77%</div>
+        <div class="summary-sub">20 of 26 ready</div>
     </div>
 </div>
 
@@ -565,8 +570,8 @@
      ═══════════════════════════════════════════════════════ -->
 <div class="readiness-container">
     <div class="readiness-bar-track">
-        <div class="readiness-segment found" style="width: 81%">26 found</div>
-        <div class="readiness-segment missing" style="width: 19%">6 missing</div>
+        <div class="readiness-segment found" style="width: 77%">20 found</div>
+        <div class="readiness-segment missing" style="width: 23%">6 missing</div>
     </div>
     <div class="readiness-labels">
         <span>0%</span>
@@ -956,7 +961,7 @@
                     <span class="category-name">Home Maintenance</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <span class="category-badge badge-complete">5 / 5</span>
+                    <span class="category-badge badge-info">5 found</span>
                     <span class="expand-arrow">▼</span>
                 </div>
             </div>
@@ -1010,7 +1015,7 @@
                     <span class="category-name">Donations</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <span class="category-badge badge-complete">1 / 1</span>
+                    <span class="category-badge badge-info">1 found</span>
                     <span class="expand-arrow">▼</span>
                 </div>
             </div>
@@ -1145,7 +1150,7 @@
                 </div>
                 <div class="scan-info-row">
                     <span class="scan-info-label">Matched to 2025</span>
-                    <span>26</span>
+                    <span>26 (20 tracked + 6 unchecked)</span>
                 </div>
                 <div class="scan-info-row">
                     <span class="scan-info-label">Skipped (other years)</span>
