@@ -147,7 +147,7 @@ def _scan_category(cat_config: dict, tax_year: int, headers: dict) -> dict:
     found_count = sum(1 for d in documents if d.get("status") == "found")
     missing_count = sum(1 for d in documents if d.get("status") == "missing")
 
-    return {
+    result = {
         "id": cat_id,
         "name": cat_name,
         "icon": icon,
@@ -159,6 +159,12 @@ def _scan_category(cat_config: dict, tax_year: int, headers: dict) -> dict:
         "folders": [{"path": fp, "count": sum(1 for f in all_files if f.get("_source_folder") == fp)} for fp in folders],
         "_files_scanned": files_scanned,
     }
+
+    # Pass compiler flag through so the frontend can show the Compile button
+    if cat_config.get("compiler"):
+        result["compiler"] = cat_config["compiler"]
+
+    return result
 
 
 def _list_folder(folder_path: str, headers: dict) -> list[dict]:

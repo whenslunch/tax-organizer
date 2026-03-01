@@ -499,6 +499,224 @@
                 display: none;
             }
         }
+
+        /* ── Compile Button ────────────────────────────── */
+        .btn-compile {
+            padding: 4px 12px;
+            border-radius: var(--radius);
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-compile:hover {
+            background: var(--accent);
+            color: #000;
+        }
+        .btn-compile:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ── Spreadsheet Panel ─────────────────────────── */
+        .compile-panel {
+            display: none;
+            border-top: 1px solid var(--border);
+            background: var(--surface-raised);
+        }
+        .compile-panel.visible { display: block; }
+
+        .compile-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+        .compile-panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .compile-panel-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .compile-panel-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .compile-panel-close:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+        .btn-report {
+            padding: 3px 10px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-report:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .compile-table-wrap {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .compile-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            font-family: var(--font-mono);
+        }
+        .compile-table th,
+        .compile-table td {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .compile-table th {
+            background: var(--surface);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .compile-table th:first-child,
+        .compile-table th:nth-child(2) {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+        }
+        .compile-table th:nth-child(2) {
+            left: 90px;
+        }
+        .compile-table td:first-child,
+        .compile-table td:nth-child(2) {
+            position: sticky;
+            left: 0;
+            background: var(--surface);
+            z-index: 1;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .compile-table td:nth-child(2) {
+            left: 90px;
+        }
+        .compile-table td {
+            text-align: right;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .compile-table td:first-child,
+        .compile-table td:nth-child(2) {
+            text-align: left;
+        }
+        .compile-table td:hover {
+            background: var(--accent);
+            color: #000;
+        }
+        .compile-table td.total-col {
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--surface);
+        }
+        .compile-table tbody tr:hover td {
+            background: rgba(88,166,255,0.08);
+        }
+        .compile-table tbody tr:hover td:hover {
+            background: var(--accent);
+            color: #000;
+        }
+        .compile-status {
+            padding: 16px 18px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ── Screenshot Modal ──────────────────────────── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.visible {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            z-index: 1;
+        }
+        .modal-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .modal-close:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+        .modal-body {
+            padding: 16px;
+            text-align: center;
+        }
+        .modal-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -1332,6 +1550,10 @@ function renderCategory(cat) {
 
     const collapsed = cat.missing_count === 0 && !cat.variableCount ? ' collapsed' : '';
 
+    const compileBtn = cat.compiler
+        ? `<button class="btn-compile" onclick="event.stopPropagation(); runCompile('${esc(cat.id)}')" id="compile-btn-${esc(cat.id)}">📊 Compile</button>`
+        : '';
+
     const rows = cat.documents.map(doc => {
         if (doc.status === 'missing') {
             return `<div class="doc-row">
@@ -1358,6 +1580,7 @@ function renderCategory(cat) {
                 <span class="category-name">${esc(cat.name)}</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
+                ${compileBtn}
                 ${badge}
                 <span class="expand-arrow">▼</span>
             </div>
@@ -1368,6 +1591,7 @@ function renderCategory(cat) {
             </div>
             ${rows}
         </div>
+        ${cat.compiler ? `<div class="compile-panel" id="compile-panel-${esc(cat.id)}"></div>` : ''}
     </div>`;
 }
 
@@ -1420,7 +1644,157 @@ function esc(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
+// ── Compile & Spreadsheet ───────────────────────────────────
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const compileCache = {};  // categoryId → compile response data
+
+function fmtAmount(val) {
+    if (!val || val === 0) return '—';
+    return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function runCompile(categoryId) {
+    const btn = document.getElementById('compile-btn-' + categoryId);
+    const panel = document.getElementById('compile-panel-' + categoryId);
+    if (!btn || !panel) return;
+
+    // If already compiled, just toggle the panel
+    if (compileCache[categoryId]) {
+        panel.classList.toggle('visible');
+        return;
+    }
+
+    // Show loading
+    btn.disabled = true;
+    btn.textContent = '⏳ Compiling…';
+    panel.innerHTML = '<div class="compile-status">Running compiler on PDF statements… This may take 1–2 minutes.</div>';
+    panel.classList.add('visible');
+
+    try {
+        const resp = await fetch('/api/compile?category=' + encodeURIComponent(categoryId));
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+        compileCache[categoryId] = data;
+        renderSpreadsheet(categoryId, data);
+        btn.textContent = '📊 Compiled ✓';
+        btn.disabled = false;
+    } catch (e) {
+        panel.innerHTML = `<div class="compile-status" style="color:var(--red)">Compile failed: ${esc(e.message)}</div>`;
+        btn.textContent = '📊 Compile';
+        btn.disabled = false;
+    }
+}
+
+function renderSpreadsheet(categoryId, data) {
+    const panel = document.getElementById('compile-panel-' + categoryId);
+    if (!panel) return;
+
+    const equity = data.equity || [];
+    if (equity.length === 0) {
+        panel.innerHTML = '<div class="compile-status">No equity data found.</div>';
+        return;
+    }
+
+    // Header
+    const monthHeaders = MONTHS.map(m => `<th>${m}</th>`).join('');
+
+    // Rows
+    const rows = equity.map(row => {
+        const monthCells = MONTHS.map(m => {
+            const val = row.months[m] || 0;
+            const hasScreenshot = findScreenshot(data.screenshots, m, row.securityCode);
+            const clickAttr = hasScreenshot
+                ? ` onclick="showScreenshot('${esc(categoryId)}','${esc(hasScreenshot)}','${esc(row.securityCode)} — ${m}')" style="cursor:pointer"`
+                : ' style="cursor:default"';
+            return `<td${clickAttr}>${fmtAmount(val)}</td>`;
+        }).join('');
+        return `<tr>
+            <td>${esc(row.securityCode)}</td>
+            <td>${esc(row.issuer)}</td>
+            ${monthCells}
+            <td class="total-col">${fmtAmount(row.total)}</td>
+        </tr>`;
+    }).join('');
+
+    // Totals row
+    const monthTotals = MONTHS.map(m => {
+        const total = equity.reduce((sum, row) => sum + (row.months[m] || 0), 0);
+        return `<td class="total-col">${fmtAmount(total)}</td>`;
+    }).join('');
+    const grandTotal = equity.reduce((sum, row) => sum + (row.total || 0), 0);
+
+    panel.innerHTML = `
+        <div class="compile-panel-header">
+            <span class="compile-panel-title">Equity Summary — ${esc(data.categoryName)} (${data.taxYear})</span>
+            <div class="compile-panel-actions">
+                ${data.reportAvailable ? `<a href="/api/report?category=${encodeURIComponent(categoryId)}" target="_blank" class="btn-report">📄 Full Report</a>` : ''}
+                <span style="font-size:11px;color:var(--text-muted)">${equity.length} securities · ${data.screenshotCount} screenshots</span>
+                <button class="compile-panel-close" onclick="document.getElementById('compile-panel-${esc(categoryId)}').classList.remove('visible')" title="Close">✕</button>
+            </div>
+        </div>
+        <div class="compile-table-wrap">
+            <table class="compile-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Issuer</th>
+                        ${monthHeaders}
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                    <tr style="font-weight:700;border-top:2px solid var(--border)">
+                        <td colspan="2" style="text-align:right">Total</td>
+                        ${monthTotals}
+                        <td class="total-col">${fmtAmount(grandTotal)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>`;
+}
+
+function findScreenshot(screenshots, month, securityCode) {
+    // Screenshot filenames look like: Jan_CICT_SP_page13.png
+    // Match by month prefix and security code
+    const prefix = month + '_' + securityCode.replace(/ /g, '_');
+    return screenshots.find(s => s.startsWith(prefix)) || null;
+}
+
+function showScreenshot(categoryId, filename, title) {
+    const overlay = document.getElementById('screenshotModal');
+    const img = document.getElementById('screenshotImg');
+    const titleEl = document.getElementById('screenshotTitle');
+    const url = `/api/screenshot?category=${encodeURIComponent(categoryId)}&file=${encodeURIComponent(filename)}`;
+
+    titleEl.textContent = title;
+    img.src = url;
+    overlay.classList.add('visible');
+}
+
+function closeScreenshotModal() {
+    const overlay = document.getElementById('screenshotModal');
+    overlay.classList.remove('visible');
+    document.getElementById('screenshotImg').src = '';
+}
 </script>
+
+<!-- Screenshot Modal -->
+<div class="modal-overlay" id="screenshotModal" onclick="if(event.target===this) closeScreenshotModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title" id="screenshotTitle"></span>
+            <button class="modal-close" onclick="closeScreenshotModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <img id="screenshotImg" alt="PDF Screenshot" />
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
