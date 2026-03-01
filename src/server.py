@@ -143,7 +143,15 @@ def api_report():
     if not report:
         return jsonify({"error": "Report not found. Run /api/compile first."}), 404
 
-    return send_file(report, mimetype="text/html")
+    # Rewrite relative screenshot paths so they work when served via this endpoint.
+    # The compiler generates paths like "screenshots/Jan_CICT_SP_page13.png" which
+    # are relative to the output dir, but the browser resolves them relative to /api/.
+    html = report.read_text(encoding="utf-8")
+    html = html.replace(
+        'screenshots/',
+        f'/api/screenshot?category={category_id}&file=',
+    )
+    return html, 200, {"Content-Type": "text/html; charset=utf-8"}
 
 
 # ── API: Screenshot ────────────────────────────────────────────
