@@ -521,6 +521,45 @@
             cursor: not-allowed;
         }
 
+        /* ── Compile Progress Bar ───────────────────────── */
+        .compile-progress {
+            padding: 18px 20px;
+        }
+        .compile-progress-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .compile-progress-label .phase {
+            font-weight: 600;
+        }
+        .compile-progress-label .pct {
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+        .compile-progress-track {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .compile-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .compile-progress-detail {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            min-height: 16px;
+        }
+
         /* ── Spreadsheet Panel ─────────────────────────── */
         .compile-panel {
             display: none;
@@ -1654,7 +1693,7 @@ function fmtAmount(val) {
     return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-async function runCompile(categoryId) {
+function runCompile(categoryId) {
     const btn = document.getElementById('compile-btn-' + categoryId);
     const panel = document.getElementById('compile-panel-' + categoryId);
     if (!btn || !panel) return;
@@ -1665,28 +1704,59 @@ async function runCompile(categoryId) {
         return;
     }
 
-    // Show loading
+    // Show progress bar
     btn.disabled = true;
     btn.textContent = '⏳ Compiling…';
-    panel.innerHTML = '<div class="compile-status">Running compiler on PDF statements… This may take 1–2 minutes.</div>';
+    panel.innerHTML = `
+        <div class="compile-progress">
+            <div class="compile-progress-label">
+                <span class="phase">Initialising…</span>
+                <span class="pct">0%</span>
+            </div>
+            <div class="compile-progress-track">
+                <div class="compile-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="compile-progress-detail">Connecting to compiler…</div>
+        </div>`;
     panel.classList.add('visible');
 
-    try {
-        const resp = await fetch('/api/compile?category=' + encodeURIComponent(categoryId));
-        if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            throw new Error(err.error || `HTTP ${resp.status}`);
+    const fill   = panel.querySelector('.compile-progress-fill');
+    const phase  = panel.querySelector('.compile-progress-label .phase');
+    const pct    = panel.querySelector('.compile-progress-label .pct');
+    const detail = panel.querySelector('.compile-progress-detail');
+
+    const es = new EventSource('/api/compile/stream?category=' + encodeURIComponent(categoryId));
+
+    es.onmessage = function(ev) {
+        let msg;
+        try { msg = JSON.parse(ev.data); } catch { return; }
+
+        if (msg.type === 'progress') {
+            fill.style.width = msg.percent + '%';
+            pct.textContent  = msg.percent + '%';
+            phase.textContent = msg.message || msg.phase;
+            if (msg.detail) detail.textContent = msg.detail;
+            else detail.textContent = msg.message || '';
+        } else if (msg.type === 'result') {
+            es.close();
+            compileCache[categoryId] = msg;
+            renderSpreadsheet(categoryId, msg);
+            btn.textContent = '📊 Compiled ✓';
+            btn.disabled = false;
+        } else if (msg.type === 'error') {
+            es.close();
+            panel.innerHTML = `<div class="compile-status" style="color:var(--red)">Compile failed: ${esc(msg.message)}</div>`;
+            btn.textContent = '📊 Compile';
+            btn.disabled = false;
         }
-        const data = await resp.json();
-        compileCache[categoryId] = data;
-        renderSpreadsheet(categoryId, data);
-        btn.textContent = '📊 Compiled ✓';
-        btn.disabled = false;
-    } catch (e) {
-        panel.innerHTML = `<div class="compile-status" style="color:var(--red)">Compile failed: ${esc(e.message)}</div>`;
+    };
+
+    es.onerror = function() {
+        es.close();
+        panel.innerHTML = '<div class="compile-status" style="color:var(--red)">Connection to compiler lost.</div>';
         btn.textContent = '📊 Compile';
         btn.disabled = false;
-    }
+    };
 }
 
 function renderSpreadsheet(categoryId, data) {

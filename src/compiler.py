@@ -6,12 +6,13 @@ DBS PDF statements, reads the CSV output, and returns structured data.
 """
 
 import csv
+import json
 import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Generator
 
 # Resolve path to the sibling tax-data-compiler repo
 _COMPILER_DIR = Path(__file__).resolve().parent.parent.parent / "tax-data-compiler"
@@ -134,6 +135,120 @@ def _parse_equity_csv(csv_path: Path) -> list[dict]:
             rows.append(parsed)
 
     return rows
+
+
+def compile_category_stream(
+    category_config: dict, tax_year: int
+) -> Generator[str, None, None]:
+    """
+    Stream compiler progress via SSE events.
+
+    Yields SSE-formatted strings: 'data: {json}\n\n'
+    Event types in the JSON payload:
+        {"type": "progress", "message": "...", "phase": "...", "percent": N}
+        {"type": "result", ...full compile result...}
+        {"type": "error", "message": "..."}
+    """
+    def sse(obj: dict) -> str:
+        return f"data: {json.dumps(obj)}\n\n"
+
+    # Validate config (same as compile_category)
+    sync_path_raw = category_config.get("localSyncPath")
+    compiler_type = category_config.get("compiler")
+    if not sync_path_raw or not compiler_type:
+        yield sse({"type": "error", "message": f"Category '{category_config.get('id')}' missing localSyncPath or compiler"})
+        return
+    if compiler_type != "tax-data-compiler":
+        yield sse({"type": "error", "message": f"Unknown compiler type: {compiler_type}"})
+        return
+
+    folder = _resolve_sync_path(sync_path_raw, tax_year)
+    if not folder.is_dir():
+        yield sse({"type": "error", "message": f"PDF folder not found: {folder}"})
+        return
+
+    python_bin = str(_COMPILER_VENV_PYTHON) if _COMPILER_VENV_PYTHON.exists() else sys.executable
+    if not _COMPILER_SCRIPT.exists():
+        yield sse({"type": "error", "message": f"Compiler script not found: {_COMPILER_SCRIPT}"})
+        return
+
+    output_dir = _get_output_dir(category_config["id"])
+
+    # Count PDFs for progress calculation
+    pdf_count = len(list(folder.glob("*.pdf")))
+    yield sse({"type": "progress", "message": f"Found {pdf_count} PDF statements", "phase": "init", "percent": 0, "total": pdf_count})
+
+    # Run compiler with Popen to stream stdout
+    proc = subprocess.Popen(
+        [python_bin, str(_COMPILER_SCRIPT), "--folder", str(folder), "--output", str(output_dir)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,  # line-buffered
+    )
+
+    phase = "equity"
+    months_done = 0
+
+    for line in proc.stdout:
+        line = line.rstrip()
+        if not line:
+            continue
+
+        # Parse compiler output to determine phase and progress
+        if line.strip().startswith("Processing "):
+            month = line.strip().replace("Processing ", "").rstrip(".")
+            months_done += 1
+            # Equity scanning is ~60% of total work (screenshots are slow)
+            pct = min(int(months_done / max(pdf_count, 1) * 60), 60)
+            yield sse({"type": "progress", "message": f"Extracting equity — {month}", "phase": "equity", "percent": pct, "detail": month})
+        elif "Scanning PDFs for dividends" in line:
+            phase = "dividends"
+            yield sse({"type": "progress", "message": "Scanning for dividend income", "phase": "dividends", "percent": 65})
+        elif "Extracted dividend data" in line:
+            yield sse({"type": "progress", "message": line.strip(), "phase": "dividends", "percent": 70})
+        elif "Scanning PDFs for cash and interest" in line:
+            phase = "cash"
+            yield sse({"type": "progress", "message": "Scanning for cash & interest", "phase": "cash", "percent": 75})
+        elif "Extracted cash and interest" in line:
+            yield sse({"type": "progress", "message": line.strip(), "phase": "cash", "percent": 80})
+        elif "Generating reports" in line:
+            phase = "report"
+            yield sse({"type": "progress", "message": "Generating HTML report & screenshots", "phase": "report", "percent": 85})
+        elif "Report saved" in line:
+            yield sse({"type": "progress", "message": "Report generated", "phase": "report", "percent": 90})
+        elif "CSV exported" in line:
+            yield sse({"type": "progress", "message": "CSV exported", "phase": "report", "percent": 95})
+        elif "Complete!" in line:
+            yield sse({"type": "progress", "message": "Complete!", "phase": "done", "percent": 100})
+
+    proc.wait()
+    if proc.returncode != 0:
+        stderr = proc.stderr.read() if proc.stderr else ""
+        yield sse({"type": "error", "message": f"Compiler failed (exit {proc.returncode}): {stderr[-300:]}"})
+        return
+
+    # Parse results and send final payload
+    csv_path = output_dir / "equity_summary.csv"
+    equity_rows = _parse_equity_csv(csv_path)
+
+    screenshots_dir = output_dir / "screenshots"
+    screenshots = []
+    if screenshots_dir.is_dir():
+        screenshots = sorted(f.name for f in screenshots_dir.iterdir() if f.suffix == ".png")
+
+    report_path = output_dir / "report.html"
+
+    yield sse({
+        "type": "result",
+        "categoryId": category_config["id"],
+        "categoryName": category_config["name"],
+        "taxYear": tax_year,
+        "equity": equity_rows,
+        "screenshotCount": len(screenshots),
+        "screenshots": screenshots,
+        "reportAvailable": report_path.exists(),
+    })
 
 
 def get_report_path(category_id: str) -> Path | None:

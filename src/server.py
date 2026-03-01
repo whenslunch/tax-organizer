@@ -15,10 +15,15 @@ Endpoints:
 import os
 import sys
 
-from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask import Flask, Response, jsonify, request, send_file, send_from_directory
 
 from .auth import clear_cache, get_access_token
-from .compiler import compile_category, get_report_path, get_screenshot_path
+from .compiler import (
+    compile_category,
+    compile_category_stream,
+    get_report_path,
+    get_screenshot_path,
+)
 from .config import load_config
 from .scanner import browse_folder, scan_all
 
@@ -124,6 +129,44 @@ def api_compile():
         return jsonify({"error": str(e)}), 400
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── API: Compile (streaming) ────────────────────────────────────
+@app.route("/api/compile/stream")
+def api_compile_stream():
+    """
+    Run the compiler with Server-Sent Events for live progress.
+    Query param: ?category=dbs-tzelin
+    """
+    category_id = request.args.get("category")
+    if not category_id:
+        return jsonify({"error": "Missing ?category= parameter"}), 400
+
+    try:
+        config = load_config()
+        tax_year = config["taxYear"]
+
+        cat_config = None
+        for cat in config["categories"]:
+            if cat["id"] == category_id:
+                cat_config = cat
+                break
+        if not cat_config:
+            return jsonify({"error": f"Category '{category_id}' not found"}), 404
+        if not cat_config.get("compiler"):
+            return jsonify({"error": f"Category '{category_id}' has no compiler configured"}), 400
+
+        return Response(
+            compile_category_stream(cat_config, tax_year),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
