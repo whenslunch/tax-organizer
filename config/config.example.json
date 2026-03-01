@@ -7,6 +7,8 @@
       "name": "DBS-TzeLin",
       "icon": "🏦",
       "folders": ["Documents/Banking & Finance/DBS/TzeLin/"],
+      "localSyncPath": "~/Library/CloudStorage/OneDrive-Personal/Documents/Banking & Finance/DBS/TzeLin",
+      "compiler": "tax-data-compiler",
       "expected": [
         { "name": "Wealth Management Consolidated Statements (Jan-Dec)", "pattern": "Wealth Management Consolidated Statement_*2025*" },
         { "name": "Annual Interest Summary", "pattern": "*Interest*2025*" },
@@ -18,6 +20,8 @@
       "name": "DBS-MayAnne",
       "icon": "🏦",
       "folders": ["Documents/Banking & Finance/DBS/MayAnne/"],
+      "localSyncPath": "~/Library/CloudStorage/OneDrive-Personal/Documents/Banking & Finance/DBS/MayAnne",
+      "compiler": "tax-data-compiler",
       "expected": [
         { "name": "Wealth Management Consolidated Statements (Jan-Dec)", "pattern": "Wealth Management Consolidated Statement_*2025*" },
         { "name": "Annual Interest Summary", "pattern": "*Interest*2025*" }

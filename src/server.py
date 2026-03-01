@@ -6,15 +6,19 @@ Endpoints:
     GET /api/scan      → Scan OneDrive and return results
     GET /api/browse    → Browse OneDrive folders (for config)
     GET /api/config    → Return current config (without secrets)
+    GET /api/compile   → Run compiler on a category's local PDFs
+    GET /api/report    → Serve the generated HTML report
+    GET /api/screenshot → Serve a highlighted PDF screenshot
     POST /api/logout   → Clear token cache
 """
 
 import os
 import sys
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_file, send_from_directory
 
 from .auth import clear_cache, get_access_token
+from .compiler import compile_category, get_report_path, get_screenshot_path
 from .config import load_config
 from .scanner import browse_folder, scan_all
 
@@ -85,6 +89,80 @@ def api_logout():
     """Clear cached token, forcing re-authentication on next scan."""
     clear_cache()
     return jsonify({"status": "ok", "message": "Token cache cleared"})
+
+
+# ── API: Compile ───────────────────────────────────────────────
+@app.route("/api/compile")
+def api_compile():
+    """
+    Run the tax-data-compiler on a category's locally synced PDFs.
+    Query param: ?category=dbs-tzelin
+    """
+    category_id = request.args.get("category")
+    if not category_id:
+        return jsonify({"error": "Missing ?category= parameter"}), 400
+
+    try:
+        config = load_config()
+        tax_year = config["taxYear"]
+
+        # Find the category config
+        cat_config = None
+        for cat in config["categories"]:
+            if cat["id"] == category_id:
+                cat_config = cat
+                break
+        if not cat_config:
+            return jsonify({"error": f"Category '{category_id}' not found"}), 404
+        if not cat_config.get("compiler"):
+            return jsonify({"error": f"Category '{category_id}' has no compiler configured"}), 400
+
+        result = compile_category(cat_config, tax_year)
+        return jsonify(result)
+
+    except (ValueError, FileNotFoundError) as e:
+        return jsonify({"error": str(e)}), 400
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── API: Report ────────────────────────────────────────────────
+@app.route("/api/report")
+def api_report():
+    """
+    Serve the generated HTML report for a category.
+    Query param: ?category=dbs-tzelin
+    """
+    category_id = request.args.get("category")
+    if not category_id:
+        return jsonify({"error": "Missing ?category= parameter"}), 400
+
+    report = get_report_path(category_id)
+    if not report:
+        return jsonify({"error": "Report not found. Run /api/compile first."}), 404
+
+    return send_file(report, mimetype="text/html")
+
+
+# ── API: Screenshot ────────────────────────────────────────────
+@app.route("/api/screenshot")
+def api_screenshot():
+    """
+    Serve a highlighted PDF screenshot.
+    Query params: ?category=dbs-tzelin&file=Jan_CICT_SP_page13.png
+    """
+    category_id = request.args.get("category")
+    filename = request.args.get("file")
+    if not category_id or not filename:
+        return jsonify({"error": "Missing ?category= or ?file= parameter"}), 400
+
+    screenshot = get_screenshot_path(category_id, filename)
+    if not screenshot:
+        return jsonify({"error": "Screenshot not found"}), 404
+
+    return send_file(screenshot, mimetype="image/png")
 
 
 # ── Main ───────────────────────────────────────────────────────
