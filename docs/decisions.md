@@ -86,6 +86,42 @@ ms.date: 2026-02-28
 
 - **Date:** 2026-02-28
 - **Status:** Accepted
-- **Context:** Some categories (Home Maintenance, Donations) have a variable number of documents — no fixed expected count.
+- **Context:** Some categories (Home Maintenance, Donations, Fortis, BCHydro) have a variable number of documents — no fixed expected count.
 - **Decision:** Categories with `"variableCount": true` in config are excluded from readiness tracking. They display a count badge ("N found") instead of "N / M."
 - **Rationale:** Readiness percentage should reflect only categories where completeness can be meaningfully measured.
+
+## DEC-011: Year Placeholder System
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Config file had hardcoded `2025` in folder paths and filename patterns. Updating the tax year would require editing dozens of strings.
+- **Decision:** Support `{year}` (4-digit) and `{yy}` (2-digit) placeholders in folder paths and expected-document patterns. The `_sub_year()` function substitutes them at scan time using the `taxYear` value from config.
+- **Rationale:** Change one number in config (`"taxYear": 2026`) and all paths and patterns update automatically. Makes the config reusable across years.
+
+## DEC-012: Multi-Folder Categories
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Some categories span multiple OneDrive folders. Home Insurance has files in both `{year} Home - Cooperators/` and `{year} Strata - Family/` under the same parent.
+- **Decision:** The `folders` array in each category accepts multiple paths. The scanner aggregates files from all listed folders before matching against expected patterns.
+- **Rationale:** Avoids duplicating categories just because files live in different subfolders. One category, one readiness check, multiple sources.
+
+## DEC-013: OneDrive Login as Popup Window
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Users need to sign in to OneDrive to ensure files sync before scanning. A navigation link would leave the dashboard.
+- **Decision:** OneDrive login opens in a popup window (500x700) rather than navigating the main page.
+- **Rationale:** Keeps the dashboard visible while the user signs in. Better UX than losing context.
+
+## DEC-014: Future Direction — Auto-Classification (Netflix Model)
+
+- **Date:** 2026-02-28
+- **Status:** Proposed
+- **Context:** Current approach requires configuring per-category folder paths and filename patterns. User observed this is the opposite of how Netflix works — you don't choose where movies are stored, you just search.
+- **Decision:** Explore a future "auto-classify" mode where the scanner recursively scans broad roots (e.g., `Documents/`) and classifies files by keyword patterns in filenames, without needing folder paths.
+- **Trade-offs:**
+  - Slower: recursive Graph API scanning vs. targeted folder reads
+  - Mitigations: caching, Graph API delta queries for change tracking, background scanning
+  - Config simplifies to classification rules + scan roots instead of per-category folder paths
+- **Rationale:** Would dramatically simplify onboarding. Current folder-based approach works but requires manual configuration for each category. Auto-classification inverts the model: define what you're looking for, not where it lives.

@@ -15,6 +15,11 @@ import requests
 GRAPH_BASE = "https://graph.microsoft.com/v1.0"
 
 
+def _sub_year(text: str, tax_year: int) -> str:
+    """Replace {year} and {yy} placeholders with the tax year."""
+    return text.replace("{year}", str(tax_year)).replace("{yy}", str(tax_year)[-2:])
+
+
 def scan_all(token: str, config: dict) -> dict[str, Any]:
     """
     Scan all configured categories against OneDrive.
@@ -100,6 +105,7 @@ def _scan_category(cat_config: dict, tax_year: int, headers: dict) -> dict:
     all_files = []
     files_scanned = 0
     for folder_path in folders:
+        folder_path = _sub_year(folder_path, tax_year)
         folder_files = _list_folder(folder_path, headers)
         files_scanned += len(folder_files)
         # Filter to tax year (by filename or lastModifiedDateTime)
@@ -118,7 +124,7 @@ def _scan_category(cat_config: dict, tax_year: int, headers: dict) -> dict:
         # Fixed-count: match each expected doc against found files
         matched_files = set()
         for exp in expected_list:
-            match = _find_match(exp, all_files, matched_files)
+            match = _find_match(exp, all_files, matched_files, tax_year)
             if match:
                 matched_files.add(match["id"])
                 doc = _file_to_doc(match)
@@ -206,7 +212,7 @@ def _matches_tax_year(file_info: dict, tax_year: int) -> bool:
     return False
 
 
-def _find_match(expected: dict, files: list[dict], already_matched: set) -> dict | None:
+def _find_match(expected: dict, files: list[dict], already_matched: set, tax_year: int = 2025) -> dict | None:
     """Find a file matching an expected document pattern."""
     patterns = expected.get("pattern", "").split("|")
     for f in files:
@@ -214,7 +220,7 @@ def _find_match(expected: dict, files: list[dict], already_matched: set) -> dict
             continue
         name = f.get("name", "")
         for pattern in patterns:
-            pattern = pattern.strip()
+            pattern = _sub_year(pattern.strip(), tax_year)
             if fnmatch.fnmatch(name.lower(), pattern.lower()):
                 return f
     return None

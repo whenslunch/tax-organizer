@@ -528,9 +528,13 @@
             <button class="theme-btn" onclick="setTheme('random')" title="Random theme">🎲</button>
         </div>
         <span class="random-label" id="randomLabel"></span>
-        <button class="btn" title="Last scanned: 2026-02-28 09:14 AM">
+        <button class="btn" onclick="window.open('https://onedrive.live.com/login','onedrive_login','width=500,height=700,left=200,top=100')" title="Sign in to OneDrive so document links work">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M6 8H5a4 4 0 0 0 0 8h1"/><path d="M2 12h20"/><circle cx="12" cy="12" r="3"/></svg>
+            OneDrive
+        </button>
+        <button class="btn" title="Last scanned: 2026-02-28 09:14 AM" id="lastScanBtn">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            9:14 AM
+            <span id="lastScanTime">9:14 AM</span>
         </button>
         <button class="btn btn-primary" id="scanBtn" onclick="runScan()">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
