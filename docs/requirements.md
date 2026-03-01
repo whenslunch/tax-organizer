@@ -2,6 +2,7 @@
 title: "Tax Organizer Requirements"
 description: "Functional and non-functional requirements for the tax-organizer project"
 ms.date: 2026-02-28
+ms.topic: reference
 ---
 
 ## Problem Statement
@@ -15,7 +16,8 @@ Tax-relevant documents are scattered across multiple OneDrive folders (Fidelity,
 3. Match discovered documents against expected patterns using glob-style matching
 4. Check completeness against a user-defined checklist of expected documents
 5. Generate clickable links that open documents directly in OneDrive
-6. Serve as the discovery layer that feeds into `tax-data-compiler` for extraction (future)
+6. Serve as the discovery layer that feeds into `tax-data-compiler` for extraction
+7. Display extracted financial data (equity, dividends, cash/interest) in spreadsheet-style tables per account holder
 
 ## Implementation Status
 
@@ -28,6 +30,7 @@ Tax-relevant documents are scattered across multiple OneDrive folders (Fidelity,
 | Config system | Done | JSON config with `{year}` placeholders |
 | Live scan integration | Done | Dashboard calls `/api/scan` |
 | Config population | 9/12 | See categories below |
+| DBS statement compiler | Planned | Subprocess integration with tax-data-compiler |
 
 ### Category Configuration Status
 
@@ -111,6 +114,22 @@ Tax-relevant documents are scattered across multiple OneDrive folders (Fidelity,
 - `GET /api/browse?path=` — browse OneDrive folder tree (for interactive folder discovery)
 - `GET /api/config` — returns current config (without secrets)
 - `POST /api/logout` — clears MSAL token cache
+- `GET /api/compile?category=<id>` — run tax-data-compiler for a DBS category, return extracted data as JSON
+
+### FR-9: DBS Statement Data Extraction
+
+- Invoke the `tax-data-compiler` script via subprocess to extract financial data from DBS Wealth Management PDF statements
+- Run separately for each account holder (DBS-TzeLin, DBS-MayAnne) using the OneDrive local sync folder as the PDF source
+- Extract three data types: equity holdings (monthly cost values per security), dividends (monthly totals per issuer), and cash/interest balances
+- The compiler writes output (CSV, screenshots) to a per-category subfolder; the API endpoint reads the CSV and returns structured JSON
+- Display results in the dashboard as spreadsheet-style HTML tables with months as columns and securities/issuers as rows
+- Each cell links to a highlighted PDF screenshot for visual verification (screenshots served as static files)
+
+### FR-10: Compiler Configuration
+
+- Each DBS category in `config.json` gains a `localSyncPath` field pointing to the OneDrive sync folder on disk (e.g., `~/OneDrive/Documents/Banking & Finance/DBS/TzeLin/`)
+- The `tax-data-compiler` script gains `--folder` and `--output` CLI arguments to accept input/output paths instead of hardcoded values
+- The two repos remain fully independent: tax-organizer calls the compiler as a subprocess and reads its output files
 
 ## Non-Functional Requirements
 
@@ -149,9 +168,8 @@ Tax-relevant documents are scattered across multiple OneDrive folders (Fidelity,
 
 ### FR-FUTURE-2: Tax Data Compiler Integration
 
-- The dashboard triggers `tax-data-compiler` to extract data from found documents
-- Documents stay in OneDrive; compiler accesses them via local OneDrive sync folder
-- Extracted data feeds back into the dashboard or a separate report
+- Promoted to FR-9 and FR-10. See active requirements above.
+- Original scope expanded: subprocess-based invocation with per-category output, spreadsheet display in dashboard, and visual verification via PDF screenshots
 
 ### FR-FUTURE-3: Interactive Folder Browsing
 

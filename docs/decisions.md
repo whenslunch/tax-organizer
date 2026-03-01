@@ -2,6 +2,7 @@
 title: "Tax Organizer Decision Log"
 description: "Record of design and implementation decisions for the tax-organizer project"
 ms.date: 2026-02-28
+ms.topic: reference
 ---
 
 # Decision Log
@@ -125,3 +126,35 @@ ms.date: 2026-02-28
   - Mitigations: caching, Graph API delta queries for change tracking, background scanning
   - Config simplifies to classification rules + scan roots instead of per-category folder paths
 - **Rationale:** Would dramatically simplify onboarding. Current folder-based approach works but requires manual configuration for each category. Auto-classification inverts the model: define what you're looking for, not where it lives.
+
+## DEC-015: Subprocess Integration for Tax Data Compiler
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** The `tax-data-compiler` repo contains an `EquityExtractor` class that parses DBS Wealth Management PDF statements and produces CSV + HTML reports. We need to invoke this from tax-organizer to display extracted data in the dashboard. Two options were evaluated: (A) import the class directly as a Python module, or (B) call the script via subprocess and read its output files.
+- **Decision:** Use subprocess invocation (Option B). The tax-organizer API endpoint runs `python ../tax-data-compiler/tax_compiler.py --folder <path> --output <path>`, waits for completion, then reads the resulting CSV to return structured JSON.
+- **Rationale:** Subprocess keeps the two repos fully independent. Each maintains its own virtual environment, dependencies (PyMuPDF is only needed in tax-data-compiler), and release cycle. A change in the compiler's internals does not break tax-organizer as long as the CSV output schema stays stable. The code is immediately readable: "call external script, read its output." The alternative (direct import) would require `sys.path` manipulation, shared dependency installation, and tighter coupling between projects.
+
+## DEC-016: Spreadsheet Display with Vanilla HTML Tables
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Extracted DBS data (equity holdings, dividends, cash/interest) needs a spreadsheet-like display in the dashboard. Options considered: (A) vanilla HTML `<table>` with CSS for sticky headers, (B) Tabulator.js (~50 KB), (C) AG Grid.
+- **Decision:** Use vanilla HTML tables styled with CSS sticky columns/headers. No external table library.
+- **Rationale:** Consistent with the existing no-framework frontend (DEC-007). The data is read-only with a fixed structure (12 month columns), so sorting/filtering features from a library add no value. Vanilla tables are easier to maintain, require no build step, and keep the dashboard dependency-free.
+
+## DEC-017: Per-Category Local Sync Path in Config
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** The tax-data-compiler reads PDFs from local disk (OneDrive sync folder), not via Graph API. To invoke it for different account holders, the API needs to know where each category's PDFs are on the local filesystem.
+- **Decision:** Add an optional `localSyncPath` field to category objects in `config.json`. This points to the OneDrive sync folder on disk (e.g., `~/OneDrive/Documents/Banking & Finance/DBS/TzeLin/`). Only categories with this field can use the compile endpoint.
+- **Rationale:** Minimal config change. Aligns with DEC-004 (files stay in OneDrive; compiler reads from the sync folder). The field is optional, so existing categories without local sync paths are unaffected.
+
+## DEC-018: Separate Compilation Per Account Holder
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** DBS statements exist for two account holders (Tze Lin and May Anne). Each has a separate folder of monthly PDFs. Data should be viewed independently.
+- **Decision:** The compile API endpoint runs separately for each category ID (`dbs-tzelin`, `dbs-mayanne`). The dashboard provides a tab or selector to switch between them. Output goes to per-category subfolders (e.g., `output/dbs-tzelin/`, `output/dbs-mayanne/`) so results do not overwrite each other.
+- **Rationale:** Account holders have different securities, dividend sources, and cash positions. Merging them would be misleading. Separate runs also allow independent re-compilation if one set of PDFs changes.
