@@ -179,8 +179,9 @@ def compile_category_stream(
     yield sse({"type": "progress", "message": f"Found {pdf_count} PDF statements", "phase": "init", "percent": 0, "total": pdf_count})
 
     # Run compiler with Popen to stream stdout
+    # -u: force unbuffered stdout in the child Python process
     proc = subprocess.Popen(
-        [python_bin, str(_COMPILER_SCRIPT), "--folder", str(folder), "--output", str(output_dir)],
+        [python_bin, "-u", str(_COMPILER_SCRIPT), "--folder", str(folder), "--output", str(output_dir)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -190,7 +191,11 @@ def compile_category_stream(
     phase = "equity"
     months_done = 0
 
-    for line in proc.stdout:
+    # Use readline() instead of iterating proc.stdout to avoid read-ahead buffering
+    while True:
+        line = proc.stdout.readline()
+        if not line and proc.poll() is not None:
+            break
         line = line.rstrip()
         if not line:
             continue

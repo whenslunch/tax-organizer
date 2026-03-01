@@ -30,7 +30,7 @@ Tax-relevant documents are scattered across multiple OneDrive folders (Fidelity,
 | Config system | Done | JSON config with `{year}` placeholders |
 | Live scan integration | Done | Dashboard calls `/api/scan` |
 | Config population | 9/12 | See categories below |
-| DBS statement compiler | Planned | Subprocess integration with tax-data-compiler |
+| DBS statement compiler | Done | Subprocess integration, SSE progress, spreadsheet view |
 
 ### Category Configuration Status
 
@@ -115,6 +115,9 @@ Tax-relevant documents are scattered across multiple OneDrive folders (Fidelity,
 - `GET /api/config` — returns current config (without secrets)
 - `POST /api/logout` — clears MSAL token cache
 - `GET /api/compile?category=<id>` — run tax-data-compiler for a DBS category, return extracted data as JSON
+- `GET /api/compile/stream?category=<id>` — same as above but streams progress via Server-Sent Events (SSE)
+- `GET /api/report?category=<id>` — serve the generated HTML report with rewritten screenshot paths
+- `GET /api/screenshot?category=<id>&file=<name>` — serve an individual highlighted PDF screenshot PNG
 
 ### FR-9: DBS Statement Data Extraction
 
@@ -166,10 +169,18 @@ Tax-relevant documents are scattered across multiple OneDrive folders (Fidelity,
 - Config reduces to classification rules + scan roots
 - Trade-off: slower scanning vs. zero folder configuration
 
+### FR-11: Live Compile Progress Streaming
+
+- When the user clicks Compile, stream real-time progress updates to the browser using Server-Sent Events (SSE)
+- The backend runs the compiler via `subprocess.Popen` with unbuffered output (`python -u`) and reads stdout line by line
+- Each compiler print statement is parsed and mapped to a phase (equity extraction per month, dividends, cash/interest, report generation) and a percentage (0–100%)
+- The frontend uses `EventSource` to receive events and updates a progress bar with the current phase, document being processed, and percentage
+- On completion, the final event contains the full structured result data, replacing the progress bar with the spreadsheet view
+
 ### FR-FUTURE-2: Tax Data Compiler Integration
 
-- Promoted to FR-9 and FR-10. See active requirements above.
-- Original scope expanded: subprocess-based invocation with per-category output, spreadsheet display in dashboard, and visual verification via PDF screenshots
+- Promoted to FR-9, FR-10, and FR-11. See active requirements above.
+- Original scope expanded: subprocess-based invocation with per-category output, spreadsheet display in dashboard, visual verification via PDF screenshots, and live SSE progress streaming
 
 ### FR-FUTURE-3: Interactive Folder Browsing
 

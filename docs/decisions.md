@@ -158,3 +158,19 @@ ms.topic: reference
 - **Context:** DBS statements exist for two account holders (Tze Lin and May Anne). Each has a separate folder of monthly PDFs. Data should be viewed independently.
 - **Decision:** The compile API endpoint runs separately for each category ID (`dbs-tzelin`, `dbs-mayanne`). The dashboard provides a tab or selector to switch between them. Output goes to per-category subfolders (e.g., `output/dbs-tzelin/`, `output/dbs-mayanne/`) so results do not overwrite each other.
 - **Rationale:** Account holders have different securities, dividend sources, and cash positions. Merging them would be misleading. Separate runs also allow independent re-compilation if one set of PDFs changes.
+
+## DEC-019: Server-Side Report Image Path Rewriting
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** The tax-data-compiler generates HTML reports with relative image paths like `screenshots/Jan_CICT_SP_page13.png`. When the report is served via the `/api/report` endpoint, the browser resolves these relative to `/api/`, producing 404s for all screenshot images.
+- **Decision:** The `/api/report` endpoint reads the HTML file body, rewrites all `screenshots/` references to `/api/screenshot?category=<id>&file=` query-string URLs, then serves the modified HTML.
+- **Rationale:** This avoids modifying the compiler's output (which works correctly when opened as a local file). The rewriting is cheap (string replacement), keeps the compiler repo independent, and uses the existing `/api/screenshot` endpoint that already serves individual PNG files.
+
+## DEC-020: SSE Streaming for Compile Progress
+
+- **Date:** 2026-02-28
+- **Status:** Accepted
+- **Context:** Compiling 12 months of DBS PDFs takes 1–2 minutes. The original implementation showed a static "Running compiler…" message with no feedback. Users had no indication of progress or which document was being processed.
+- **Decision:** Use Server-Sent Events (SSE) to stream real-time progress from the compiler subprocess to the browser. The backend uses `subprocess.Popen` with line-buffered stdout (Python `-u` flag) to read each `print()` line as it is emitted. Each line is parsed, mapped to a phase and percentage, and yielded as an SSE event. The frontend uses `EventSource` to receive events and animate a progress bar.
+- **Rationale:** SSE is simpler than WebSockets for one-way server-to-client streaming: no handshake protocol, no library, auto-reconnects. It works with plain Flask (`Response` with `text/event-stream`). The compiler's existing `print()` statements provide natural progress markers without modifying the compiler code. Key implementation detail: the child Python process must run with `-u` (unbuffered) and the parent must use `readline()` (not `for line in proc.stdout`) to avoid buffering that delays all output until completion.
